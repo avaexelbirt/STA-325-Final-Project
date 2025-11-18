@@ -21,38 +21,48 @@ Worst: mean of the three largest values (mean of the "outliers")
 ### Table Comparing Benign vs Malignant
 ```{r}
 # Creating a new dataframe
-worst_stats <- df |>
+stats_worst <- df |>
   group_by(diagnosis) |>
   summarise(
     count = n(),
-    mean_radius_worst = mean(radius_worst),
-    se_radius_worst = sd(radius_worst),
-    mean_texture_worst = mean(texture_worst),
-    se_texture_worst = sd(texture_worst),
-    mean_perimeter_worst = mean(perimeter_worst),
-    se_perimeter_worst = sd(perimeter_worst),
-    mean_area_worst = mean(area_worst),
-    se_area_worst = sd(area_worst),
-    mean_smoothness_worst = mean(smoothness_worst),
-    se_smoothness_worst = sd(smoothness_worst),
-    mean_compactness_worst = mean(compactness_worst),
-    se_compactness_worst = sd(compactness_worst),
-    mean_concavity_worst = mean(concavity_worst),
-    se_concavity_worst = sd(concavity_worst),
-    mean_concave.points_worst = mean(concave.points_worst),
-    se_concave.points_worst = sd(concave.points_worst),
-    mean_symmetry_worst = mean(symmetry_worst),
-    se_symmetry_worst = sd(symmetry_worst),
-    mean_fractal_dimension_worst = mean(fractal_dimension_worst),
+    mean_radius = mean(radius_worst),
+    median_radius = median(radius_worst),
+    se_radius = sd(radius_worst),
+    mean_texture = mean(texture_worst),
+    median_texture = median(texture_worst),
+    se_texture = sd(texture_worst),
+    mean_perimeter = mean(perimeter_worst),
+    median_perimeter = median(perimeter_worst),
+    se_perimeter = sd(perimeter_worst),
+    mean_area = mean(area_worst),
+    median_area = median(area_worst),
+    se_area = sd(area_worst),
+    mean_smoothness = mean(smoothness_worst),
+    median_smoothness = median(smoothness_worst),
+    se_smoothness = sd(smoothness_worst),
+    mean_compactness = mean(compactness_worst),
+    median_compactness = median(compactness_worst),
+    se_compactness = sd(compactness_worst),
+    mean_concavity = mean(concavity_worst),
+    median_concavity = median(concavity_worst),
+    se_concavity = sd(concavity_worst),
+    mean_concave.points = mean(concave.points_worst),
+    median_concave.points = median(concave.points_worst),
+    se_concave.points = sd(concave.points_worst),
+    mean_symmetry = mean(symmetry_worst),
+    median_symmetry = median(symmetry_worst),
+    se_symmetry = sd(symmetry_worst),
+    mean_fractal_dimension = mean(fractal_dimension_worst),
+    median_fractal_dimension = median(fractal_dimension_worst),
     se_fractal_dimension_worst = sd(fractal_dimension_worst),
   )
 
 # Transposing the dataframe
-worst_stats <- t(worst_stats)
+stats_worst_t <- t(stats_worst)
 
 # Making the diagnosis the column
-colnames(worst_stats) <- as.character(unlist(worst_stats[1, ])) 
-worst_stats <- worst_stats[-1, ]  # remove the first row
+colnames(stats_worst_t) <- as.character(unlist(stats_worst_t[1, ])) 
+stats_worst_t <- stats_worst_t[-1, ]  # remove the first row
 
 ```
 
@@ -67,15 +77,200 @@ Observations:
 - Fractical dimension is slightly higher for malignant than benign tissue
 - Most of the standard errors are fairly similar which is interesting because it gives stronger evidence that the features with higher means for malignant will likely have higher means and could be used as an indicator of whether the tissue is benign or malignant based on the average of the three most extreme points
 
-
-
 ### Basic Distributions Separated by Tissue Type
+
+```{r}
+# create ordered levels and a reversed palette
+levels_diag <- levels(factor(df$diagnosis))         # preserve factor ordering
+pal <- rev(scales::hue_pal()(length(levels_diag)))  # reversed palette
+names(pal) <- levels_diag    
+```
+
+#### Radius
 
 ```{r}
 # Basic distributions of these variables
 ggplot(df) + 
-  geom_histogram(aes(x = radius_worst, fill = diagnosis))
+  geom_histogram(aes(x = radius_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_radius, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_radius, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Radius (worst)", y = "Count",
+       title = "Distribution of the Worst Radius by Diagnosis")
+
+```
+The above graph shows the worst radius based on whether the tissue is benign or malignant. The mean values are in the dashed lines and the median values are the solid lines.
+
+We also see that the benign distribution has a mean very close to the median, whereas the malignant distribution has a mean which is greater than the median due to outliers.
+
+Both look fairly normally distributed, but we may want to address the outliers in the malignant distribution.
+
+#### Texture
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = texture_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_texture, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_texture, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Texture (worst)", y = "Count",
+       title = "Distribution of the Worst Texture by Diagnosis")
 ```
 
+These distributins have a fairly similar shape and both look roughly normal although there are some potential outliers for the malignant tissue. Transformation is likely not needed for this distribution unless we want to correct for outliers.
+
+#### Perimeter
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = perimeter_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_perimeter, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_perimeter, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Perimeter (worst)", y = "Count",
+       title = "Distribution of the Worst Perimeter by Diagnosis")
+
+```
+
+For Perimeter we notice that malignant tissue is more right-skewed based on the fact that the mean is a bit higher than the median. Although a transformation could be useful to correct for this asymmetry, we might not want to transform the distributions since the malignant distribution is fairly normal.
+
+#### Area
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = area_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_area, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_area, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Area (worst)", y = "Count",
+       title = "Distribution of the Worst Area by Diagnosis")
+```
+This is one of the first variables where area is very differently distributed between malignant and benign tissue. It might be worth further exploring area for this reason, especially given how strong of a right skew the malignant tissue has.
+
+#### Smoothness
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = smoothness_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_smoothness, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_smoothness, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Smoothness (worst)", y = "Count",
+       title = "Distribution of the Worst Smoothness by Diagnosis")
+```
+
+This distribution is fairly similar across both tissues although malignant does tend to have a higher mean and medina value of smoothness.
+
+#### Compactness
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = compactness_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_compactness, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_compactness, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Compactness (worst)", y = "Count",
+       title = "Distribution of the Worst Compactness by Diagnosis")
+```
+
+Similarly to area, the compactness is much more spread out for malignant tissue and has a stronger presence of outliers. However, the benign tissue is also right skewed a bit. Applying a transformation to both of these distributions might help to address the normality assumptions. 
+
+#### Concavity
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = concavity_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_concavity, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_concavity, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Concavity (worst)", y = "Count",
+       title = "Distribution of the Worst Concavity by Diagnosis")
+```
+
+Again, both malignant and benign are right skewed but benign has a stronger right skew in this distribution. Applying a transformation will be usefult o address the violation of normality assumptions.
+
+#### Texture
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = concave.points_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_concave.points, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_concave.points, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Concave Points (worst)", y = "Count",
+       title = "Distribution of the Worst Concave Points by Diagnosis")
+
+```
+
+The mean concave points are both fairly normally distributed with the malignant tissue having a much higher mean an median when comparing the types of tissue which could be something to explore further.
+
+#### Symmetry
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = symmetry_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_symmetry, color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_symmetry, color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Symmetry (worst)", y = "Count",
+       title = "Distribution of the Worst Symmetry by Diagnosis")
+
+```
+Symmetry has closer median values but malignant tissue has several outliers leading to a right skew in the distribution.
+
+#### Fractal Dimension
+```{r}
+# Basic distributions of these variables
+ggplot(df) + 
+  geom_histogram(aes(x = fractal_dimension_worst, fill = diagnosis), alpha = 0.3) + 
+  theme_bw() + 
+  scale_fill_manual(values = pal, name = "Diagnosis") +
+  scale_color_manual(values = pal, guide = "none") + 
+  geom_vline(data= stats_worst, aes(xintercept = mean_fractal_dimension, 
+                                    color = diagnosis), 
+             linetype = "dashed") + 
+  geom_vline(data= stats_worst, aes(xintercept = median_fractal_dimension, 
+                                    color = diagnosis), 
+             linetype = "solid") + 
+  labs(x = "Fractal Dimension (worst)", y = "Count",
+       title = "Distribution of the Worst Fractal Dimension by Diagnosis")
+```
+Both of these distributions are right skewed, but they are fairly close in terms of how they overal over each other. Transforming this feature might be a good idea to address the normality assumptions.
 
 
